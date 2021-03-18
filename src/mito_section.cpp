@@ -1,55 +1,43 @@
-#include <morphio/morphology.h>
-#include <morphio/mitochondria.h>
 #include <morphio/mito_section.h>
-#include <morphio/mito_iterators.h>
+#include <morphio/mitochondria.h>
+#include <morphio/morphology.h>
 
-namespace morphio
-{
+namespace morphio {
 
-mito_depth_iterator MitoSection::depth_begin() const
-{
+mito_depth_iterator MitoSection::depth_begin() const {
     return mito_depth_iterator(*this);
 }
 
-mito_depth_iterator MitoSection::depth_end() const
-{
+mito_depth_iterator MitoSection::depth_end() const {
     return mito_depth_iterator();
 }
 
-mito_breadth_iterator MitoSection::breadth_begin() const
-{
+mito_breadth_iterator MitoSection::breadth_begin() const {
     return mito_breadth_iterator(*this);
 }
 
-mito_breadth_iterator MitoSection::breadth_end() const
-{
+mito_breadth_iterator MitoSection::breadth_end() const {
     return mito_breadth_iterator();
 }
 
-mito_upstream_iterator MitoSection::upstream_begin() const
-{
+mito_upstream_iterator MitoSection::upstream_begin() const {
     return mito_upstream_iterator(*this);
 }
 
-mito_upstream_iterator MitoSection::upstream_end() const
-{
+mito_upstream_iterator MitoSection::upstream_end() const {
     return mito_upstream_iterator();
 }
 
-const range<const uint32_t> MitoSection::neuriteSectionIds() const
-{
+range<const uint32_t> MitoSection::neuriteSectionIds() const {
     return get<Property::MitoNeuriteSectionId>();
 }
 
-const range<const float> MitoSection::diameters() const
-{
+range<const floatType> MitoSection::diameters() const {
     return get<Property::MitoDiameter>();
 }
 
-const range<const float> MitoSection::relativePathLengths() const
-{
+range<const floatType> MitoSection::relativePathLengths() const {
     return get<Property::MitoPathLength>();
 }
 
-
-} // namespace morphio
+}  // namespace morphio

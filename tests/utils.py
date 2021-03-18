@@ -4,29 +4,42 @@ import shutil
 import sys
 import tempfile
 from contextlib import contextmanager
+from difflib import Differ
 from functools import partial
 from io import StringIO
+from pprint import pformat
 
 from nose.tools import assert_raises, ok_
 
-from morphio import Morphology
+from morphio import Morphology, set_ignored_warning
 
 
 @contextmanager
-def setup_tempdir(prefix):
+def setup_tempdir(prefix, no_cleanup=False):
     '''Context manager returning a temporary directory'''
     temp_dir = tempfile.mkdtemp(prefix=prefix)
     try:
         yield temp_dir
     finally:
-        shutil.rmtree(temp_dir)
+        if not no_cleanup:
+            shutil.rmtree(temp_dir)
 
+@contextmanager
+def ignored_warning(warning):
+    '''Context manager during which a warning is ignored'''
+    try:
+        set_ignored_warning(warning, True)
+        yield
+    finally:
+        set_ignored_warning(warning, False)
 
 @contextmanager
 def _tmp_file(content, extension):
-    with tempfile.NamedTemporaryFile(suffix='.' + extension, mode='w') as tmp_file:
+    with tempfile.NamedTemporaryFile(suffix='.' + extension, mode='w', delete=False) as tmp_file:
         tmp_file.write(content)
         tmp_file.seek(0)
+        tmp_file.close()
+
         yield tmp_file
 
 
@@ -40,9 +53,22 @@ def strip_color_codes(string):
     return ansi_escape.sub('', string)
 
 
+def strip_all(string):
+    '''Strip color code and whitespace at the beginning end of each line'''
+    lines = (strip_color_codes(line).strip() for line in string.splitlines())
+    return list(filter(None, lines))
+
+
 def assert_substring(substring, string):
     sep = ['\n' + 80 * '>' + '\n', '\n' + 80 * '<' + '\n']
     ok_(substring in string, "{}\n NOT IN \n{}".format(substring.join(sep), string.join(sep)))
+
+
+def assert_string_equal(str1, str2):
+	str1, str2 = strip_all(str1), strip_all(str2)
+	diff = list(Differ().compare(str1, str2))
+	if '\n'.join(str1) != '\n'.join(str2):
+		raise AssertionError('Strings does not match:\n\n' + pformat(diff))
 
 
 def _test_exception(content, exception, str1, str2, extension):

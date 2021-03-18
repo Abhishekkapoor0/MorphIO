@@ -1,51 +1,60 @@
-matrix:
+jobs:
   include:
-    # - os: linux
-    #   dist: trusty
-    #   sudo: required
+    - os: linux
+      dist: xenial
+      env:
+        CXX: g++
+        CC: gcc
+    - os: linux
+      dist: xenial
+      env:
+        CXX: clang++
+        CC: clang
+
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode10.1
+      language: generic
+      env:
+        CXX: clang++
+        CC: clang
+    - os: osx
+      osx_image: xcode10.1
+      language: generic
+      env:
+        CXX: g++
+        CC: gcc
 
-language: c++
-sudo: required
-services:
-  - docker
+    - os: windows
+      language: c++
+      env:
+        - MINCONDA_VERSION="latest"
+        - CMAKE_GENERATOR="Visual Studio 15 2017 Win64"
+        - TESTS_TARGET="RUN_TESTS";
+      install:
+        - choco install --yes miniconda3
+        - source C:/Tools/miniconda3/Scripts/activate
+        - conda config --set always_yes yes --set changeps1 no
+        - conda update -q conda
+        - conda install -c conda-forge hdf5
+
+addons:
+  homebrew:
+    packages:
+    - hdf5
+  apt:
+    packages:
+    - libhdf5-dev
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+language: python
 python:
-  # - 2.7
-  - 3.5
-  # - 3.6
-# addons:
-#   apt:
-#     packages:
-#       - libhdf5-dev
-#       - g++-5
-#     sources: &sources
-#       - llvm-toolchain-precise-3.8
-#       - ubuntu-toolchain-r-test
-cache: pip
-before_install:
-  - if [ $TRAVIS_OS_NAME = linux ]; then sudo apt-get install libhdf5-dev; else rm /usr/local/include/c++; brew install hdf5; fi
-  - virtualenv env && source env/bin/activate
-install:
-  - pip install .
+  - 3.7
+
+install: skip
+
 script:
-  - pip install -r tests/requirement_tests.txt
-  - nosetests
-
-# before_deploy:
-  - pip install delocate
-  # Build macos wheel
-  - ./packaging/python_wheel/build_wheel.sh
-
-  # Build Linux wheels with the manylinux docker image
-  - packaging/python_wheel/build_docker_image.sh
-  - packaging/python_wheel/build_wheel_in_manylinux1_docker.sh
-
-deploy:
-  provider: pypi
-  user: bbp.opensource
-  password:
-    secure: N/2AGpTUSOGOxQqYulja5Etj228w1SByVuX+ozPvuPJTm5kJh5fqav8FVtPLziaWAaWxJ6W2nFdWT9AwodwMk3+1NBHMWpOZ3NJnvibz0cvYCkXdNcgXOFGrPSeX3Oo2d74IeT20R44lieZEW62j4488SSaVkwr3p7YgyfVMVGo=
-  on:
-    tags: true
-    branch: master
+  - ./ci/python_test.sh
+  - ./ci/cpp_test.sh

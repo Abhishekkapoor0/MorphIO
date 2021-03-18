@@ -1,11 +1,9 @@
 #pragma once
 
-
 #include <morphio/morphology.h>
 #include <morphio/types.h>
 
-namespace morphio
-{
+namespace morphio {
 /**
  * A class to represent a neuron soma.
  *
@@ -29,60 +27,66 @@ namespace morphio
  */
 class Soma
 {
-public:
-
+  public:
     /**
      * Return the  coordinates (x,y,z) of all soma points
      **/
-    const range<const Point> points() const
-    {
-        return get<Property::Point>();
-    }
+    inline range<const Point> points() const noexcept;
 
     /**
      * Return the diameters of all soma points
      **/
-    const range<const float> diameters() const
-    {
-        return get<Property::Diameter>();
-    }
+    inline range<const floatType> diameters() const noexcept;
 
     /**
      * Return the soma type
      **/
-    const SomaType type() const
-    {
-        return _properties->_cellLevel._somaType;
-    }
-
+    inline SomaType type() const noexcept;
     /**
      * Return the center of gravity of the soma points
      **/
-    const Point center() const;
+    Point center() const;
 
     /**
      * Return the soma volume\n"
      * Note: the soma volume computation depends on the soma type
      **/
-    const float volume() const;
+    floatType volume() const;
 
     /**
      * Return the soma surface\n"
      * Note: the soma surface computation depends on the soma type
      **/
-    const float surface() const;
-    const float maxDistance() const;
+    floatType surface() const;
 
+    /**
+     * Return the maximum distance between the center of gravity and any of
+     * the soma points
+     */
+    floatType maxDistance() const;
 
-
-private:
-    Soma(std::shared_ptr<Property::Properties>);
-    template <typename Property>
-    const range<const typename Property::Type> get() const;
-    friend const Soma Morphology::soma() const;
+  private:
+    explicit Soma(const std::shared_ptr<Property::Properties>&);
+    // TODO: find out why the following line does not work
+    // when friend class Morphology; is removed
+    // template <typename Property>
+    // friend const morphio::Soma morphio::Morphology::soma() const;
+    friend class Morphology;
     friend class mut::Soma;
 
     std::shared_ptr<Property::Properties> _properties;
-    SectionRange _range;
 };
+
+inline range<const Point> Soma::points() const noexcept {
+    return _properties->_somaLevel._points;
 }
+
+inline range<const floatType> Soma::diameters() const noexcept {
+    return _properties->_somaLevel._diameters;
+}
+
+inline SomaType Soma::type() const noexcept {
+    return _properties->_cellLevel._somaType;
+}
+
+}  // namespace morphio

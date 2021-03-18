@@ -1,78 +1,49 @@
 #pragma once
 
+#include <map>
+#include <memory>
+
+#include <morphio/mito_section.h>
 #include <morphio/properties.h>
 #include <morphio/types.h>
-#include <morphio/mito_section.h>
 
-namespace morphio
-{
-namespace mut
-{
-class MitoSection
-{
-public:
-    MitoSection(int id, const Property::MitochondriaPointLevel& mitoPoints)
-        : _id(id), _mitoPoints(mitoPoints)
-        {
-        }
+#include <morphio/mut/mito_section.h>
 
-    MitoSection(int id, const morphio::MitoSection& section)
-        : MitoSection(id,
-                      Property::MitochondriaPointLevel(section._properties->_mitochondriaPointLevel,
-                                                       section._range))
-        {
-        }
+namespace morphio {
+namespace mut {
 
-    /**
-     * Return the diameters of all points of this section
-     **/
-    const uint32_t id() { return _id; }
-
-    /**
-     * Return the diameters of all points of this section
-     **/
-    std::vector<float>& diameters() { return _mitoPoints._diameters; }
-
-    /**
-     * Return the neurite section Ids of all points of this section
-     **/
-    std::vector<uint32_t>& neuriteSectionIds() { return _mitoPoints._sectionIds; }
-
-    /**
-     * Return the relative distance (between 0 and 1)
-     * between the start of the neuronal section and each point
-     * of this mitochondrial section
-     **/
-    std::vector<float>& pathLengths() { return _mitoPoints._relativePathLengths; }
-
-    Property::MitochondriaPointLevel _mitoPoints;
-    uint32_t _id;
-};
+using mito_upstream_iterator = morphio::upstream_iterator_t<std::shared_ptr<MitoSection>>;
+using mito_breadth_iterator =
+    morphio::breadth_iterator_t<std::shared_ptr<MitoSection>, Mitochondria>;
+using mito_depth_iterator = morphio::depth_iterator_t<std::shared_ptr<MitoSection>, Mitochondria>;
 
 /**
  * The entry-point class to access mitochondrial data
  *
- * By design, it is the equivalent of the Morphology class but at the mitochondrial level.
- * As the Morphology class, it implements a section accessor and a root section accessor
- * returning views on the Properties object for the queried mitochondrial section.
+ * By design, it is the equivalent of the Morphology class but at the
+ *mitochondrial level. As the Morphology class, it implements a section accessor
+ *and a root section accessor returning views on the Properties object for the
+ *queried mitochondrial section.
  **/
 class Mitochondria
 {
-public:
-    Mitochondria() :_mitochondriaSectionCounter(0)
-    {
-    }
+    using MitoSectionP = std::shared_ptr<MitoSection>;
 
-    const std::vector<uint32_t> children(uint32_t id) const;
-    const std::shared_ptr<MitoSection> section(uint32_t id) const;
-    const std::map<uint32_t, std::shared_ptr<MitoSection>> sections() const;
+  public:
+    Mitochondria()
+        : _counter(0) {}
+
+    const std::vector<MitoSectionP>& children(const MitoSectionP&) const;
+    const MitoSectionP& section(uint32_t id) const;
+    const std::map<uint32_t, MitoSectionP>& sections() const noexcept;
 
     /**
        Depth first iterator starting at a given section id
 
        If id == -1, the iteration will start at each root section, successively
     **/
-    mito_depth_iterator depth_begin(uint32_t id = -1) const;
+    mito_depth_iterator depth_begin() const;
+    mito_depth_iterator depth_begin(const MitoSectionP& section) const;
     mito_depth_iterator depth_end() const;
 
     /**
@@ -81,7 +52,8 @@ public:
        If id == -1, the iteration will be successively performed starting
        at each root section
     **/
-    mito_breadth_iterator breadth_begin(uint32_t id = -1) const;
+    mito_breadth_iterator breadth_begin() const;
+    mito_breadth_iterator breadth_begin(const MitoSectionP& section) const;
     mito_breadth_iterator breadth_end() const;
 
     /**
@@ -90,55 +62,67 @@ public:
        If id == -1, the iteration will be successively performed starting
        at each root section
     **/
-    mito_upstream_iterator upstream_begin(uint32_t id = -1) const;
+    mito_upstream_iterator upstream_begin() const;
+    mito_upstream_iterator upstream_begin(const MitoSectionP& section) const;
     mito_upstream_iterator upstream_end() const;
-
-
 
     /**
      * Return the parent mithochondrial section ID
      **/
-    const int32_t parent(uint32_t id) const;
+    const MitoSectionP& parent(const MitoSectionP& parent) const;
 
     /**
        Return true if section is a root section
     **/
-    const bool isRoot(uint32_t id) const;
-
+    bool isRoot(const MitoSectionP& section) const;
 
     /**
      * Return the list of IDs of all mitochondrial root sections
      * (sections whose parent ID are -1)
      **/
-    const std::vector<uint32_t>& rootSections() const;
-
-
-    /**
-       Append a new MitoSection the given parentId (-1 create a new mitochondrion)
-    **/
-    uint32_t appendSection(int32_t mitoParentId,
-                           const Property::MitochondriaPointLevel& points);
+    const std::vector<MitoSectionP>& rootSections() const noexcept;
 
     /**
-       Append the read-only MitoSection to the given parentId (-1 creates a new mitochondrion)
-
-       If recursive == true, all descendent mito sections will be appended as well
+       Append a new root MitoSection
     **/
-    uint32_t appendSection(int32_t mitoParentId, const morphio::MitoSection& section,
-        bool recursive = false);
+    MitoSectionP appendRootSection(const Property::MitochondriaPointLevel& points);
 
+    /**
+       Append a root MitoSection
 
-    const std::shared_ptr<MitoSection> mitoSection(uint32_t id) const;
+       If recursive == true, all descendent mito sections will be appended as
+    well
+    **/
+    MitoSectionP appendRootSection(const morphio::MitoSection&, bool recursive = false);
+    MitoSectionP appendRootSection(const MitoSectionP&, bool recursive = false);
 
+    const MitoSectionP& mitoSection(uint32_t id) const;
+
+    /**
+       Fill the 'properties' variable with the mitochondria data
+    **/
     void _buildMitochondria(Property::Properties& properties) const;
 
-private:
-    std::map<uint32_t, std::vector<uint32_t>> _children;
-    std::map<uint32_t, uint32_t> _parent;
-    std::vector<uint32_t> _rootSections;
-    std::map<uint32_t, std::shared_ptr<MitoSection>> _sections;
+  private:
+    friend class MitoSection;
 
-    uint32_t _mitochondriaSectionCounter;
+    uint32_t _register(const MitoSectionP& section);
+
+    uint32_t _counter;
+    std::map<uint32_t, std::vector<MitoSectionP>> _children;
+    std::map<uint32_t, uint32_t> _parent;
+    std::vector<MitoSectionP> _rootSections;
+    std::map<uint32_t, MitoSectionP> _sections;
 };
+
+inline const std::map<uint32_t, Mitochondria::MitoSectionP>& Mitochondria::sections() const
+    noexcept {
+    return _sections;
 }
+
+inline const std::vector<Mitochondria::MitoSectionP>& Mitochondria::rootSections() const noexcept {
+    return _rootSections;
 }
+
+}  // namespace mut
+}  // namespace morphio

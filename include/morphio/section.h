@@ -1,13 +1,14 @@
 #pragma once
 
-#include <morphio/section_base.h>
-#include <morphio/iterators.h>
+#include <memory>  // std::shared_ptr
+
 #include <morphio/morphology.h>
 #include <morphio/properties.h>
+#include <morphio/section_base.h>
+#include <morphio/section_iterators.hpp>
 #include <morphio/types.h>
 
-namespace morphio
-{
+namespace morphio {
 /**
  * A class to represent a morphological section.
  *
@@ -28,17 +29,16 @@ namespace morphio
  * is a Section referring to it.
  */
 
-class Section : public SectionBase<Section>
+using upstream_iterator = upstream_iterator_t<Section>;
+using breadth_iterator = breadth_iterator_t<Section, Morphology>;
+using depth_iterator = depth_iterator_t<Section, Morphology>;
+
+class Section: public SectionBase<Section>
 {
-    typedef Property::Section SectionId;
-    typedef Property::Point PointAttribute;
-public:
+    using SectionId = Property::Section;
+    using PointAttribute = Property::Point;
 
-    /**
-       Euclidian distance between first and last point of the section
-    **/
-    const float length() const;
-
+  public:
     /**
        Depth first search iterator
     **/
@@ -57,45 +57,44 @@ public:
     upstream_iterator upstream_begin() const;
     upstream_iterator upstream_end() const;
 
-
     /**
-     * Return a view (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
+     * Return a view
+    (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
      to this section's point coordinates
     **/
-    const range<const Point> points() const;
+    range<const Point> points() const;
 
     /**
-     * Return a view (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
+     * Return a view
+    (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
      to this section's point diameters
     **/
-    const range<const float> diameters() const;
+    range<const floatType> diameters() const;
 
     /**
-     * Return a view (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
+     * Return a view
+     (https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/gsl-intro.md#gslspan-what-is-gslspan-and-what-is-it-for)
      to this section's point perimeters
      **/
-    const range<const float> perimeters() const;
+    range<const floatType> perimeters() const;
 
     /**
      * Return the morphological type of this section (dendrite, axon, ...)
      */
-    const SectionType type() const;
+    SectionType type() const;
     friend class mut::Section;
-    friend const Section Morphology::section(const uint32_t&) const;
+    friend Section Morphology::section(uint32_t) const;
     friend class SectionBase<Section>;
 
-protected:
-    Section(uint32_t id, std::shared_ptr<Property::Properties> morphology) : SectionBase(id, morphology) {}
-protected:
-    const static int rootSectionsParentId = 0;
-
-
+  protected:
+    Section(uint32_t id_, const std::shared_ptr<Property::Properties>& properties)
+        : SectionBase(id_, properties) {}
 };
 
 // explicit instanciation
 template class SectionBase<Section>;
 
-} // namespace morphio
+}  // namespace morphio
 
 std::ostream& operator<<(std::ostream& os, const morphio::Section& section);
-std::ostream& operator<<(std::ostream& os, morphio::range<const morphio::Point> points);
+std::ostream& operator<<(std::ostream& os, const morphio::range<const morphio::Point>& points);

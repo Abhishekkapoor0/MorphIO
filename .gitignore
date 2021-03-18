@@ -1,15 +1,12 @@
 # Python wheels
 *.whl
 
-*.asc
-*.swc
-*.h5
-
+.eggs/
 bin/
 src/version.cpp
 morphio.egg-info/
-
-packaging/python_wheel/toolchain/
+MorphIO.egg-info/
+.venv
 
 *.pyc
 

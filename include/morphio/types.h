@@ -1,102 +1,55 @@
 #pragma once
 
-#include <map>
-#include <memory>
-#include <queue>
-#include <set>
-#include <stack>
-#include <string>
-#include <vector>
+#include <memory>  // std::shared_ptr
+#include <string>  // std::string
+#include <vector>  // std::vector
 
-#include <stdint.h>
-
+#include <gsl/gsl>
 #include <morphio/enums.h>
 #include <morphio/exceptions.h>
 #include <morphio/vector_types.h>
-#include <gsl/gsl>
 
-#ifdef __GNUC__
-#define BRAIN_UNUSED __attribute__((unused))
-#else
-#define BRAIN_UNUSED
-#endif
-
-// TODO: bcoste fix me
-#include <iostream>
-#define LBTHROW(x) (throw x)
-#define LBWARN std::cerr
 
 /** @namespace morphio Blue Brain File IO classes */
-namespace morphio
-{
-extern const std::string VERSION;
-typedef std::string URI;
+namespace morphio {
 
 using namespace enums;
-class Morphology;
-class MorphologyInitData;
-template <class T> class SectionBase;
-class Section;
+class EndoplasmicReticulum;
 class MitoSection;
 class Mitochondria;
+class Morphology;
+class Section;
+template <class T>
+class SectionBase;
 class Soma;
 
-namespace Property
-{
+namespace Property {
 struct Properties;
 }
 
-namespace detail
-{
-class NeurolucidaParser;
-}
-
-namespace plugin
-{
-    class DebugInfo;
-    class ErrorMessages;
-}
-namespace mut
-{
+namespace vasculature {
 class Section;
+class Vasculature;
+}  // namespace vasculature
+
+namespace readers {
+struct DebugInfo;
+class ErrorMessages;
+}  // namespace readers
+
+namespace mut {
+class EndoplasmicReticulum;
 class MitoSection;
-class Soma;
-class Morphology;
 class Mitochondria;
+class Morphology;
+class Section;
+class Soma;
+}  // namespace mut
+
+using SectionRange = std::pair<size_t, size_t>;
+using MorphologyVersion = std::tuple<std::string, uint32_t, uint32_t>;
 
 template <typename T>
-class MitoIterator;
+using range = gsl::span<T>;
 
-template <typename T>
-class Iterator;
-
-typedef MitoIterator<std::stack<uint32_t>> mito_depth_iterator;
-typedef MitoIterator<std::queue<uint32_t>> mito_breadth_iterator;
-typedef MitoIterator<std::vector<uint32_t>> mito_upstream_iterator;
-
-typedef Iterator<std::stack<std::shared_ptr<Section>>> depth_iterator;
-typedef Iterator<std::queue<std::shared_ptr<Section>>> breadth_iterator;
-typedef Iterator<std::vector<std::shared_ptr<Section>>> upstream_iterator;
-}
-
-template <typename T>
-class MitoIterator;
-
-template <typename T>
-class Iterator;
-
-
-typedef std::pair<size_t, size_t> SectionRange;
-
-typedef MitoIterator<std::stack<MitoSection>> mito_depth_iterator;
-typedef MitoIterator<std::queue<MitoSection>> mito_breadth_iterator;
-typedef MitoIterator<std::vector<MitoSection>> mito_upstream_iterator;
-
-typedef Iterator<std::stack<Section>> depth_iterator;
-typedef Iterator<std::queue<Section>> breadth_iterator;
-typedef Iterator<std::vector<Section>> upstream_iterator;
-
-template <typename T> using range = gsl::span<T>;
-
-std::ostream& operator<<(std::ostream& os, const std::vector<Point>&);
-} // namespace morphio
+}  // namespace morphio

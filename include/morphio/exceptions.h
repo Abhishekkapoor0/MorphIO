@@ -1,77 +1,77 @@
 #pragma once
+#include <stdexcept>
 
-namespace morphio
-{
+namespace morphio {
 /**
    Base class of all morphio errors
  **/
-class MorphioError: public std::runtime_error {
-public:
-    MorphioError(const std::string& _msg) : std::runtime_error(_msg) {}
-};
-
-class NotImplementedError: public MorphioError {
-public:
-    NotImplementedError(const std::string& _msg) : MorphioError(_msg) {}
-};
-
-class RawDataError: public MorphioError {
-public:
-    RawDataError(const std::string& _msg) : MorphioError(_msg) {}
-};
-
-class UnknownFileType : public MorphioError {
-public:
-UnknownFileType(const std::string& _msg) : MorphioError(_msg) {}
-};
-
-class SomaError: public MorphioError {
-public:
-SomaError(const std::string& _msg) : MorphioError(_msg) {}
-};
-
-class IDSequenceError : public RawDataError
+class MorphioError: public std::runtime_error
 {
-public:
-    IDSequenceError(const std::string& _msg)
-        : RawDataError(_msg)
-    {
-    }
+  public:
+    explicit MorphioError(const std::string& _msg)
+        : std::runtime_error(_msg) {}
 };
 
-class MultipleTrees : public RawDataError
+class NotImplementedError: public MorphioError
 {
-public:
-    MultipleTrees(const std::string& _msg)
-        : RawDataError(_msg)
-    {
-    }
+  public:
+    explicit NotImplementedError(const std::string& _msg)
+        : MorphioError(_msg) {}
 };
 
-class MissingParentError : public RawDataError
+class RawDataError: public MorphioError
 {
-public:
-    MissingParentError(const std::string& _msg)
-        : RawDataError(_msg)
-    {
-    }
+  public:
+    explicit RawDataError(const std::string& _msg)
+        : MorphioError(_msg) {}
 };
 
-class SectionBuilderError : public RawDataError
+class UnknownFileType: public MorphioError
 {
-public:
-    SectionBuilderError(const std::string& _msg)
-        : RawDataError(_msg)
-        {
-        }
+  public:
+    explicit UnknownFileType(const std::string& _msg)
+        : MorphioError(_msg) {}
 };
 
-class WriterError : public MorphioError
+class SomaError: public MorphioError
 {
-public:
-    WriterError(const std::string& _msg)
-        : MorphioError(_msg)
-        {
-        }
+  public:
+    explicit SomaError(const std::string& _msg)
+        : MorphioError(_msg) {}
 };
-}
+
+class IDSequenceError: public RawDataError
+{
+  public:
+    explicit IDSequenceError(const std::string& _msg)
+        : RawDataError(_msg) {}
+};
+
+class MultipleTrees: public RawDataError
+{
+  public:
+    explicit MultipleTrees(const std::string& _msg)
+        : RawDataError(_msg) {}
+};
+
+class MissingParentError: public RawDataError
+{
+  public:
+    explicit MissingParentError(const std::string& _msg)
+        : RawDataError(_msg) {}
+};
+
+class SectionBuilderError: public RawDataError
+{
+  public:
+    explicit SectionBuilderError(const std::string& _msg)
+        : RawDataError(_msg) {}
+};
+
+class WriterError: public MorphioError
+{
+  public:
+    explicit WriterError(const std::string& _msg)
+        : MorphioError(_msg) {}
+};
+}  // namespace morphio

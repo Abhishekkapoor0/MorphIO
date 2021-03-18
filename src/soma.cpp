@@ -1,72 +1,38 @@
-#include <cmath>
-
 #include <morphio/section.h>
+#include <morphio/shared_utils.tpp>
 #include <morphio/soma.h>
 #include <morphio/vector_types.h>
-#include <morphio/shared_utils.tpp>
 
+namespace morphio {
+Soma::Soma(const std::shared_ptr<Property::Properties>& properties)
+    : _properties(properties) {}
 
-namespace morphio
-{
-Soma::Soma(std::shared_ptr<Property::Properties> properties)
-    : _properties(properties)
-{
-    uint32_t id = 0;
-    const auto& points = properties->get<Property::Point>();
-    const auto& sections = properties->get<Property::Section>();
-    if (id >= sections.size())
-        LBTHROW(RawDataError("Requested section ID (" + std::to_string(id) +
-                             ") is out of array bounds (array size = " +
-                             std::to_string(sections.size()) + ")"));
-
-    const size_t start = sections[id][0];
-    const size_t end =
-        id == sections.size() - 1 ? points.size() : sections[id + 1][0];
-    _range = std::make_pair(start, end);
-
-    if (_range.second < _range.first)
-        LBWARN << "Dereferencing broken soma "
-               << "Section range: " << _range.first << " -> " << _range.second
-               << std::endl;
+Point Soma::center() const {
+    return centerOfGravity(_properties->_somaLevel._points);
 }
 
-template <typename TProperty>
-const range<const typename TProperty::Type> Soma::get() const
-{
-    auto ptr_start = _properties->get<TProperty>().data() + _range.first;
-    return range<const typename TProperty::Type>(ptr_start, _range.second);
-}
-
-const Point Soma::center() const
-{
-    auto points = get<Property::Point>();
-    return centerOfGravity(points);
-}
-
-const float Soma::volume() const {
-    switch(_properties->_cellLevel._somaType) {
-    case SOMA_NEUROMORPHO_THREE_POINT_CYLINDERS:
-    {
-        float radius = diameters()[0] / 2;
-        return 4 * M_PI * radius * radius;
+floatType Soma::volume() const {
+    switch (_properties->_cellLevel._somaType) {
+    case SOMA_NEUROMORPHO_THREE_POINT_CYLINDERS: {
+        floatType radius = diameters()[0] / 2;
+        return 4 * morphio::PI * radius * radius;
     }
 
+    case SOMA_SINGLE_POINT:
+    case SOMA_CYLINDERS:
+    case SOMA_SIMPLE_CONTOUR:
+    case SOMA_UNDEFINED:
     default:
         throw;
-
     }
 }
 
-const float Soma::surface() const {
-    return _somaSurface<morphio::range<const float>,
-                 morphio::range<const Point>>(type(), diameters(), points());
+floatType Soma::surface() const {
+    return _somaSurface<range<const floatType>, range<const Point>>(type(), diameters(), points());
 }
 
-const float Soma::maxDistance() const {};
-
-template const range<const Property::Point::Type>
-    Soma::get<Property::Point>() const;
-template const range<const Property::Diameter::Type>
-    Soma::get<Property::Diameter>() const;
-
+floatType Soma::maxDistance() const {
+    return maxDistanceToCenterOfGravity(_properties->_somaLevel._points);
 }
+
+}  // namespace morphio

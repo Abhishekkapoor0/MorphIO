@@ -1,35 +1,38 @@
 #pragma once
 
+#include <cstdint>  // uint32_t
+#include <memory>   // std::shared_ptr
+#include <vector>   // std::vector
 
-#include <morphio/iterators.h>
 #include <morphio/morphology.h>
 #include <morphio/properties.h>
 #include <morphio/types.h>
 
-namespace morphio
-{
-
+namespace morphio {
 /**
-   This CRTP (https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
-   defines basic methods that every kind of sections (should them be neuronal or mithochondrial)
-   must define.
+   This CRTP
+ (https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) defines
+ basic methods that every kind of sections (should them be neuronal or
+ mithochondrial) must define.
 
-   The CRTP is used here so that the methods of the base class can return object of the derived class.
-   Examples:
-       T SectionBase::parent()
-       std::vector<T> SectionBase::children()
+   The CRTP is used here so that the methods of the base class can return object
+ of the derived class. Examples: T SectionBase::parent() std::vector<T>
+ SectionBase::children()
  **/
 
 template <typename T>
 class SectionBase
 {
-public:
+  public:
+    SectionBase()
+        : _id(0) {}
+
     SectionBase(const SectionBase& section);
 
-    const SectionBase& operator=(const SectionBase& section);
+    SectionBase& operator=(const SectionBase& other);
 
-    bool operator==(const SectionBase& section) const;
-    bool operator!=(const SectionBase& section) const;
+    inline bool operator==(const SectionBase& other) const noexcept;
+    inline bool operator!=(const SectionBase& other) const noexcept;
 
     /**
      * Return true if this section is a root section (parent ID == -1)
@@ -46,24 +49,39 @@ public:
     /**
      * Return a list of children sections
      */
-    const std::vector<T> children() const;
+    std::vector<T> children() const;
 
     /** Return the ID of this section. */
-    const uint32_t id() const;
+    inline uint32_t id() const noexcept;
 
-protected:
-    SectionBase(uint32_t id, std::shared_ptr<Property::Properties> morphology);
-    template <typename Property> const range<const typename Property::Type> get() const;
-
+  protected:
+    SectionBase(uint32_t id, const std::shared_ptr<Property::Properties>& properties);
+    template <typename Property>
+    range<const typename Property::Type> get() const;
 
     uint32_t _id;
     SectionRange _range;
     std::shared_ptr<Property::Properties> _properties;
 };
 
-} // namespace morphio
+template <typename T>
+inline bool SectionBase<T>::operator==(const SectionBase& other) const noexcept {
+    return other._id == _id && other._properties == _properties;
+}
+
+template <typename T>
+inline bool SectionBase<T>::operator!=(const SectionBase& other) const noexcept {
+    return !(*this == other);
+}
+
+template <typename T>
+inline uint32_t SectionBase<T>::id() const noexcept {
+    return _id;
+}
+
+}  // namespace morphio
 
 std::ostream& operator<<(std::ostream& os, const morphio::Section& section);
-std::ostream& operator<<(std::ostream& os, morphio::range<const morphio::Point> points);
+std::ostream& operator<<(std::ostream& os, const morphio::range<const morphio::Point>& points);
 
 #include "section_base.tpp"

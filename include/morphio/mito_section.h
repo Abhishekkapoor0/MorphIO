@@ -1,17 +1,21 @@
 #pragma once
 
-#include <morphio/section_base.h>
-#include <morphio/properties.h>
 #include <morphio/mitochondria.h>
+#include <morphio/properties.h>
+#include <morphio/section_base.h>
 #include <morphio/types.h>
 
-namespace morphio
+namespace morphio {
+using mito_upstream_iterator = upstream_iterator_t<MitoSection>;
+using mito_breadth_iterator = morphio::breadth_iterator_t<MitoSection, Mitochondria>;
+using mito_depth_iterator = morphio::depth_iterator_t<MitoSection, Mitochondria>;
+
+class MitoSection: public SectionBase<MitoSection>
 {
-class MitoSection : public SectionBase<MitoSection>
-{
-    typedef Property::MitoSection SectionId;
-    typedef Property::MitoDiameter PointAttribute;
-public:
+    using SectionId = Property::MitoSection;
+    using PointAttribute = Property::MitoDiameter;
+
+  public:
     /**
        Depth first search iterator
     **/
@@ -30,16 +34,15 @@ public:
     mito_upstream_iterator upstream_begin() const;
     mito_upstream_iterator upstream_end() const;
 
-
     /**
      * Returns list of neuronal section IDs associated to each point
      **/
-    const range<const uint32_t> neuriteSectionIds() const;
+    range<const uint32_t> neuriteSectionIds() const;
 
     /**
      * Returns list of section's point diameters
      **/
-    const range<const float> diameters() const;
+    range<const floatType> diameters() const;
 
     /**
      * Returns list of relative distances between the start
@@ -49,18 +52,13 @@ public:
      *       - a relative distance of 1 means the mitochondrial point is at the
      *         end of the neuronal section
      **/
-    const range<const float> relativePathLengths() const;
+    range<const floatType> relativePathLengths() const;
 
-    /** Return the morphological type of this section (dendrite, axon, ...). */
-    const SectionType type() const;
-
-
-
-protected:
-    MitoSection(uint32_t id, std::shared_ptr<Property::Properties> morphology) : SectionBase(id, morphology) {}
-    friend const MitoSection Mitochondria::section(const uint32_t&) const;
+  protected:
+    MitoSection(uint32_t id_, const std::shared_ptr<Property::Properties>& morphology)
+        : SectionBase(id_, morphology) {}
+    friend MitoSection Mitochondria::section(uint32_t) const;
     friend class SectionBase<MitoSection>;
     friend class mut::MitoSection;
-    const static int rootSectionsParentId = -1;
 };
-} // namespace morphio
+}  // namespace morphio

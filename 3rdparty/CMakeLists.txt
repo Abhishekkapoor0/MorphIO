@@ -1,17 +1,22 @@
 find_package(HDF5 REQUIRED)
-add_library(HighFive INTERFACE)
-target_include_directories(HighFive INTERFACE
-    HighFive/include/
-    ${HDF5_INCLUDE_DIRS})
-target_link_libraries(HighFive INTERFACE
-    ${HDF5_C_LIBRARIES})
 
-add_subdirectory(pybind11)
-target_include_directories(pybind11 INTERFACE
-    pybind11)
+if (NOT EXTERNAL_HIGHFIVE)
+  set(HIGHFIVE_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(HIGHFIVE_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+  set(HIGHFIVE_USE_BOOST OFF CACHE BOOL "" FORCE)
+  set(HIGHFIVE_USE_INSTALL_DEPS ON CACHE BOOL "" FORCE)
+  add_subdirectory(HighFive)
+  target_include_directories(HighFive SYSTEM INTERFACE)
+endif()
 
 add_subdirectory(GSL_LITE)
-target_include_directories(GSL_LITE INTERFACE)
+target_include_directories(gsl-lite SYSTEM INTERFACE)
 
 add_library(lexertl INTERFACE)
-target_include_directories(lexertl INTERFACE lexertl)
+target_include_directories(lexertl SYSTEM INTERFACE lexertl)
+
+if(BUILD_BINDINGS)
+  add_subdirectory(pybind11)
+  target_include_directories(pybind11 SYSTEM INTERFACE
+    pybind11)
+endif()

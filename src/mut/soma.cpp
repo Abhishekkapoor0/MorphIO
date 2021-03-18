@@ -6,44 +6,43 @@
 #include <morphio/section.h>
 #include <morphio/shared_utils.tpp>
 
-namespace morphio
-{
-namespace mut
-{
+namespace morphio {
+namespace mut {
+Soma::Soma(const Property::PointLevel& pointProperties)
+    : _somaType(SOMA_UNDEFINED)
+    , _pointProperties(pointProperties) {}
 
-Soma::Soma(const Property::PointLevel &pointProperties) : _somaType(SOMA_UNDEFINED),
-                                                          _pointProperties(pointProperties)
-{
-}
+Soma::Soma(const Soma& soma)
+    : _somaType(soma._somaType)
+    , _pointProperties(soma._pointProperties) {}
 
-Soma::Soma(const morphio::Soma& soma) : _somaType(soma.type())
-{
-    _pointProperties =
-        Property::PointLevel(soma._properties->_pointLevel, soma._range);
-}
+Soma::Soma(const morphio::Soma& soma)
+    : _somaType(soma.type())
+    , _pointProperties(soma._properties->_somaLevel) {}
 
-const Point Soma::center() const
-{
+Point Soma::center() const {
     return centerOfGravity(points());
 }
 
-const float Soma::surface() const {
-    return _somaSurface<std::vector<float>,
-                        std::vector<Point>>(type(),
-                        diameters(),
-                        points());
+floatType Soma::surface() const {
+    return _somaSurface<std::vector<morphio::floatType>, std::vector<Point>>(type(),
+                                                                             diameters(),
+                                                                             points());
 }
 
-std::ostream& operator<<(std::ostream& os, Soma& soma)
-{
+floatType Soma::maxDistance() const {
+    return maxDistanceToCenterOfGravity(_pointProperties._points);
+}
+
+std::ostream& operator<<(std::ostream& os, const Soma& soma) {
     os << dumpPoints(soma.points());
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, std::shared_ptr<Soma> somaPtr){
+std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Soma>& somaPtr) {
     os << *somaPtr;
     return os;
 }
 
-} // end namespace mut
-} // end namespace morphio
+}  // end namespace mut
+}  // end namespace morphio
